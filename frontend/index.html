@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="navigation-hub" class="container hub-container">
+        <h1>☕ Cafe Central</h1>
+        <p class="subtitle">Select a station to continue</p>
+        
+        <div class="role-selection-grid">
+            <div class="role-card cashier-card">
+                <div class="role-icon">💰</div>
+                <h3>Cashier</h3>
+                <p>Register & Sales</p>
+                <button onclick="instantLogin('cashier')" class="btn-main">Open Station</button>
+            </div>
+
+            <div class="role-card staff-card">
+                <div class="role-icon">🧑‍🍳</div>
+                <h3>Kitchen</h3>
+                <p>Order Fulfillment</p>
+                <div class="sub-buttons">
+                    <button onclick="instantLogin('barista')">☕ Barista</button>
+                    <button onclick="instantLogin('cake')">🍰 Baker</button>
+                </div>
+            </div>
+
+            <div class="role-card admin-card">
+                <div class="role-icon">🔐</div>
+                <h3>Management</h3>
+                <p>Reports & Data</p>
+                <button onclick="showAdminLogin()" class="btn-admin-access">Admin Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-login-modal" class="container hidden auth-card">
+        <h2>Admin Authentication</h2>
+        <div class="input-group">
+            <input type="text" id="admin-user" placeholder="Username">
+            <input type="password" id="admin-pass" placeholder="Password">
+        </div>
+        <button onclick="checkAdminCredentials()" class="btn-order">Enter Dashboard</button>
+        <button onclick="goHome()" class="btn-back">Cancel</button>
+    </div>
+
+    <div id="admin-panel" class="container hidden admin-full-width">
+        <div class="header-flex">
+            <h1>Admin Dashboard</h1>
+            <button onclick="goHome()" class="btn-logout-small">Logout</button>
+        </div>
+        
+        <div class="main-grid-3">
+            <div class="section-card border-green">
+                <div class="profit-box">
+                    <p>Total Sales: <span class="green-txt">+$<span id="total-sales">0.00</span></span></p>
+                    <p>Withdrawals: <span class="red-txt">-$<span id="total-expenses">0.00</span></span></p>
+                    <hr>
+                    <h2 class="net-txt">Net: $<span id="net-profit">0.00</span></h2>
+                </div>
+                <button onclick="showOngoingModal()" class="btn-ongoing">📋 View Live Queue</button>
+                <h4 style="margin-top:15px;">Withdrawal History</h4>
+                <div class="scroll-box" style="height: 180px;">
+                    <table class="admin-table">
+                        <tbody id="expense-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section-card border-blue">
+                <h4>➕ Create New Order</h4>
+                <input type="text" id="admin-order-items" placeholder="Items (e.g. 1 Latte)">
+                <input type="text" id="admin-order-table" placeholder="Table #">
+                <input type="number" id="admin-order-total" placeholder="Price ($)">
+                <select id="admin-target-staff">
+                    <option value="barista">Barista (Drink)</option>
+                    <option value="cake">Baker (Food)</option>
+                </select>
+                <button onclick="adminSubmitOrder()" class="btn-order">Place Order</button>
+            </div>
+
+            <div class="section-card border-dark">
+                <h4>📜 Full Order History</h4>
+                <div class="scroll-box" style="height: 380px;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>ID</th><th>Table</th><th>Total</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="admin-all-orders"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cashier-panel" class="container hidden cashier-width">
+        <div class="header-flex">
+            <h1>Cashier Station</h1>
+            <button onclick="goHome()" class="btn-logout-small">Close Register</button>
+        </div>
+        <div class="main-grid-2">
+            <div class="section-card border-green">
+                <h4>➕ New Sale</h4>
+                <input type="text" id="order-items" placeholder="Order Details">
+                <input type="text" id="order-table" placeholder="Table Number">
+                <input type="number" id="order-total" placeholder="Total Amount">
+                <select id="target-staff">
+                    <option value="barista">Send to Barista</option>
+                    <option value="cake">Send to Baker</option>
+                </select>
+                <button onclick="submitOrder()" class="btn-order">Submit Order</button>
+            </div>
+            <div class="section-card border-red">
+                <h4>➖ Withdrawal</h4>
+                <input type="text" id="exp-desc" placeholder="Reason for withdrawal">
+                <input type="number" id="exp-amount" placeholder="Amount ($)">
+                <div class="spacer"></div>
+                <button onclick="submitWithdrawal()" class="btn-withdraw">Confirm Cash Out</button>
+                <button onclick="showOngoingModal()" class="btn-ongoing" style="margin-top:10px;">📋 Check Queue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="staff-panel" class="container hidden">
+        <h1 id="staff-title">Orders</h1>
+        <div id="staff-orders-list"></div>
+        <button onclick="goHome()" class="btn-back">Return to Hub</button>
+    </div>
+
+    <div id="ongoing-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Live Preparation Queue</h2>
+            <div id="modal-queue-list" class="scroll-box" style="height: 350px;"></div>
+            <button onclick="closeOngoingModal()" class="btn-back">Close View</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
