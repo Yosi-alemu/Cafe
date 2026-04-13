@@ -4,53 +4,101 @@ function showCashierLogin() {
 }
 
 function checkCashierCredentials() {
-    var user = document.getElementById('cashier-user').value;
-    var pass = document.getElementById('cashier-pass').value;
-    if(user === 'cashier' && pass === 'cafe123') {
+    var userEl = document.getElementById('cashier-user');
+    var passEl = document.getElementById('cashier-pass');
+    
+    if(userEl.value === 'cashier' && passEl.value === 'cafe123') {
         showView('cashier-panel');
         document.getElementById('cashier-login-error').style.display = 'none';
-        document.getElementById('cashier-user').value = '';
-        document.getElementById('cashier-pass').value = '';
     } else {
         document.getElementById('cashier-login-error').style.display = 'block';
     }
+    
+    // Clear input data after submission regardless of success
+    userEl.value = '';
+    passEl.value = '';
 }
 // --- MENU & ORDER CALCULATION ---
 const MENU = [
-    { name: 'Espresso', price: 3 },
-    { name: 'Latte', price: 4 },
-    { name: 'Cappuccino', price: 4 },
-    { name: 'Mocha', price: 4.5 },
-    { name: 'Tea', price: 2.5 },
-    { name: 'Cake Slice', price: 3.5 },
-    { name: 'Cookie', price: 2 }
+    { name: 'Espresso', price: 3.0, target: 'barista' },
+    { name: 'Latte', price: 4.0, target: 'barista' },
+    { name: 'Cappuccino', price: 4.0, target: 'barista' },
+    { name: 'Iced Coffee', price: 4.5, target: 'barista' },
+    { name: 'Tea', price: 2.5, target: 'barista' },
+    { name: 'Croissant', price: 3.5, target: 'cake' },
+    { name: 'Cheesecake', price: 5.0, target: 'cake' },
+    { name: 'Muffin', price: 3.0, target: 'cake' },
+    { name: 'Cookie', price: 2.0, target: 'cake' }
 ];
 
+let currentCart = [];
+
 function renderMenu() {
-    const menuDiv = document.getElementById('menu-list');
-    menuDiv.innerHTML = '';
-    MENU.forEach(item => {
-        menuDiv.innerHTML += `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
-                <span>${item.name} ($${item.price.toFixed(2)})</span>
-                <input type="number" min="0" value="0" style="width:50px;" id="menu-qty-${item.name.replace(/\s/g,'-')}">
-            </div>
+    const dropdown = document.getElementById('menu-dropdown');
+    dropdown.innerHTML = '<option value="" disabled selected>Select an item...</option>';
+    MENU.forEach((item, index) => {
+        dropdown.innerHTML += `<option value="${index}">${item.name} ($${item.price.toFixed(2)})</option>`;
+    });
+}
+
+// Call renderMenu to immediately populate the HTML dropdown on page load
+renderMenu();
+
+function addToCart() {
+    const dropdown = document.getElementById('menu-dropdown');
+    const qtyInput = document.getElementById('menu-qty');
+    const index = dropdown.value;
+    const qty = parseInt(qtyInput.value) || 0;
+
+    if (index === "" || qty <= 0) return alert("Please select a valid item and quantity.");
+
+    const selectedItem = MENU[index];
+    
+    // Check if it already exists in the cart to increment quantity
+    const existing = currentCart.find(c => c.item.name === selectedItem.name);
+    if(existing) {
+        existing.qty += qty;
+    } else {
+        currentCart.push({ item: selectedItem, qty: qty });
+    }
+
+    // Reset inputs
+    dropdown.value = "";
+    qtyInput.value = "1";
+
+    renderCart();
+    calculateLiveTotal();
+}
+
+function renderCart() {
+    const cartList = document.getElementById('cart-list');
+    cartList.innerHTML = "";
+    if (currentCart.length === 0) {
+        cartList.innerHTML = '<li style="color:#888; text-align:center; padding:10px;">Cart is empty</li>';
+        return;
+    }
+
+    currentCart.forEach((cartItem, idx) => {
+        cartList.innerHTML += `
+            <li style="display:flex; justify-content:space-between; padding:5px 0;">
+                <span>${cartItem.qty} x ${cartItem.item.name}</span>
+                <span>$${(cartItem.qty * cartItem.item.price).toFixed(2)} 
+                    <button onclick="removeFromCart(${idx})" style="margin-left:10px; background:#ff7675; color:white; border:none; border-radius:3px; cursor:pointer;">X</button>
+                </span>
+            </li>
         `;
     });
 }
 
-function calculateOrderTotal() {
-    let total = 0;
-    let items = [];
-    MENU.forEach(item => {
-        const qty = parseInt(document.getElementById('menu-qty-' + item.name.replace(/\s/g,'-')).value) || 0;
-        if(qty > 0) {
-            total += qty * item.price;
-            items.push(`${qty} x ${item.name}`);
-        }
-    });
-    document.getElementById('order-items').value = items.join(', ');
-    document.getElementById('order-total').value = total.toFixed(2);
+function removeFromCart(idx) {
+    currentCart.splice(idx, 1);
+    renderCart();
+    calculateLiveTotal();
+}
+
+function calculateLiveTotal() {
+    let total = currentCart.reduce((sum, cartItem) => sum + (cartItem.item.price * cartItem.qty), 0);
+    document.getElementById('live-total').innerText = total.toFixed(2);
 }
 const API_BASE = "http://127.0.0.1:8000";
 let currentRole = "";
@@ -127,33 +175,66 @@ function closeOngoingModal() {
 // --- ORDER SUBMISSION & CLEARING ---
 
 async function submitOrder() {
-    const itemsInput = document.getElementById('order-items');
     const tableInput = document.getElementById('order-table');
-    const totalInput = document.getElementById('order-total');
-    const statusSelect = document.getElementById('target-staff');
 
-    if(!itemsInput.value || !tableInput.value || !totalInput.value) return alert("Fill all fields");
+    if(!tableInput.value) return alert("Please select a table number.");
+    if(currentCart.length === 0) return alert("Please add at least one item to the order.");
 
-    const data = {
-        items: itemsInput.value,
-        table_number: tableInput.value,
-        total: parseFloat(totalInput.value),
-        status: statusSelect.value
-    };
+    let baristaItems = [];
+    let baristaTotal = 0;
+    let bakerItems = [];
+    let bakerTotal = 0;
 
-    await fetch(`${API_BASE}/orders/`, { 
-        method: "POST", 
-        headers: {"Content-Type": "application/json"}, 
-        body: JSON.stringify(data) 
+    // Parse the cart into stations
+    currentCart.forEach(cartItem => {
+        if (cartItem.item.target === 'barista') {
+            baristaItems.push(`${cartItem.qty} x ${cartItem.item.name}`);
+            baristaTotal += cartItem.qty * cartItem.item.price;
+        } else {
+            bakerItems.push(`${cartItem.qty} x ${cartItem.item.name}`);
+            bakerTotal += cartItem.qty * cartItem.item.price;
+        }
     });
 
-    // CLEAR CASHIER ORDER BOXES & MENU
-    itemsInput.value = "";
+    const promises = [];
+
+    if (baristaItems.length > 0) {
+        promises.push(fetch(`${API_BASE}/orders/`, { 
+            method: "POST", 
+            headers: {"Content-Type": "application/json"}, 
+            body: JSON.stringify({
+                items: baristaItems.join(', '),
+                table_number: tableInput.value,
+                total: baristaTotal,
+                status: 'barista'
+            }) 
+        }));
+    }
+
+    if (bakerItems.length > 0) {
+        promises.push(fetch(`${API_BASE}/orders/`, { 
+            method: "POST", 
+            headers: {"Content-Type": "application/json"}, 
+            body: JSON.stringify({
+                items: bakerItems.join(', '),
+                table_number: tableInput.value,
+                total: bakerTotal,
+                status: 'cake'
+            }) 
+        }));
+    }
+
+    await Promise.all(promises);
+
+    // CLEAR CASHIER ORDER CACHE AND UI
     tableInput.value = "";
-    totalInput.value = "";
-    MENU.forEach(item => {
-        document.getElementById('menu-qty-' + item.name.replace(/\s/g,'-')).value = 0;
-    });
+    document.getElementById('menu-dropdown').value = "";
+    document.getElementById('menu-qty').value = "1";
+    currentCart = [];
+    
+    renderCart();
+    calculateLiveTotal();
+    
     alert("Order Sent Successfully");
 }
 
@@ -263,6 +344,7 @@ async function loadAdminData() {
             <tr>
                 <td>#${o.id}</td>
                 <td><b>T${o.table_number}</b></td>
+                <td>${o.items}</td>
                 <td>$${o.total.toFixed(2)}</td>
                 <td><span class="tag ${tagClass}">${o.status}</span></td>
                 <td><button onclick="deleteOrder(${o.id})" style="background:#ff7675; color:white; padding:4px 8px; border-radius:4px;">X</button></td>

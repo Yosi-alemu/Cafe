@@ -140,3 +140,15 @@ button:active { transform: scale(0.98); }
 .modal-content { background: white; padding: 30px; border-radius: 20px; width: 550px; text-align: center; }
 .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .spacer { flex-grow: 1; }
+
+/* PRINT STYLES */
+@media print {
+    body { background: white !important; padding: 0 !important; margin: 0 !important; }
+    .container { box-shadow: none !important; border: none !important; padding: 0 !important; }
+    h1, h2, h3, h4 { color: black !important; }
+    .btn-logout-small, .btn-order, .btn-ongoing, button, select, input, .hub-container, .border-blue, .border-dark, .menu-mgmt-card { display: none !important; }
+    .profit-box { border: 1px solid black; }
+    .scroll-box { height: auto !important; overflow: visible !important; border: none !important; }
+    #admin-panel { width: 100% !important; }
+    .main-grid-3 { grid-template-columns: 1fr !important; }
+}
