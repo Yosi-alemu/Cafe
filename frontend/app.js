@@ -1,3 +1,57 @@
+// --- CASHIER LOGIN LOGIC ---
+function showCashierLogin() {
+    showView('cashier-login-modal');
+}
+
+function checkCashierCredentials() {
+    var user = document.getElementById('cashier-user').value;
+    var pass = document.getElementById('cashier-pass').value;
+    if(user === 'cashier' && pass === 'cafe123') {
+        showView('cashier-panel');
+        document.getElementById('cashier-login-error').style.display = 'none';
+        document.getElementById('cashier-user').value = '';
+        document.getElementById('cashier-pass').value = '';
+    } else {
+        document.getElementById('cashier-login-error').style.display = 'block';
+    }
+}
+// --- MENU & ORDER CALCULATION ---
+const MENU = [
+    { name: 'Espresso', price: 3 },
+    { name: 'Latte', price: 4 },
+    { name: 'Cappuccino', price: 4 },
+    { name: 'Mocha', price: 4.5 },
+    { name: 'Tea', price: 2.5 },
+    { name: 'Cake Slice', price: 3.5 },
+    { name: 'Cookie', price: 2 }
+];
+
+function renderMenu() {
+    const menuDiv = document.getElementById('menu-list');
+    menuDiv.innerHTML = '';
+    MENU.forEach(item => {
+        menuDiv.innerHTML += `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+                <span>${item.name} ($${item.price.toFixed(2)})</span>
+                <input type="number" min="0" value="0" style="width:50px;" id="menu-qty-${item.name.replace(/\s/g,'-')}">
+            </div>
+        `;
+    });
+}
+
+function calculateOrderTotal() {
+    let total = 0;
+    let items = [];
+    MENU.forEach(item => {
+        const qty = parseInt(document.getElementById('menu-qty-' + item.name.replace(/\s/g,'-')).value) || 0;
+        if(qty > 0) {
+            total += qty * item.price;
+            items.push(`${qty} x ${item.name}`);
+        }
+    });
+    document.getElementById('order-items').value = items.join(', ');
+    document.getElementById('order-total').value = total.toFixed(2);
+}
 const API_BASE = "http://127.0.0.1:8000";
 let currentRole = "";
 
@@ -93,10 +147,13 @@ async function submitOrder() {
         body: JSON.stringify(data) 
     });
 
-    // CLEAR CASHIER ORDER BOXES
+    // CLEAR CASHIER ORDER BOXES & MENU
     itemsInput.value = "";
     tableInput.value = "";
     totalInput.value = "";
+    MENU.forEach(item => {
+        document.getElementById('menu-qty-' + item.name.replace(/\s/g,'-')).value = 0;
+    });
     alert("Order Sent Successfully");
 }
 

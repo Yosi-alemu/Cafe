@@ -20,14 +20,18 @@
                 <button onclick="instantLogin('cashier')" class="btn-main">Open Station</button>
             </div>
 
-            <div class="role-card staff-card">
-                <div class="role-icon">🧑‍🍳</div>
-                <h3>Kitchen</h3>
-                <p>Order Fulfillment</p>
-                <div class="sub-buttons">
-                    <button onclick="instantLogin('barista')">☕ Barista</button>
-                    <button onclick="instantLogin('cake')">🍰 Baker</button>
-                </div>
+            <div class="role-card barista-card">
+                <div class="role-icon">☕</div>
+                <h3>Barista</h3>
+                <p>Coffee Station</p>
+                <button onclick="instantLogin('barista')" class="btn-main">Open Barista</button>
+            </div>
+
+            <div class="role-card baker-card">
+                <div class="role-icon">🍰</div>
+                <h3>Baker</h3>
+                <p>Cake Station</p>
+                <button onclick="instantLogin('cake')" class="btn-main">Open Baker</button>
             </div>
 
             <div class="role-card admin-card">
@@ -106,14 +110,17 @@
         <div class="main-grid-2">
             <div class="section-card border-green">
                 <h4>➕ New Sale</h4>
-                <input type="text" id="order-items" placeholder="Order Details">
+                <div id="menu-list"></div>
+                <button onclick="calculateOrderTotal()" class="btn-order" style="margin:10px 0;">Calculate Total</button>
+                <input type="text" id="order-items" placeholder="Order Details" readonly>
                 <input type="text" id="order-table" placeholder="Table Number">
-                <input type="number" id="order-total" placeholder="Total Amount">
+                <input type="number" id="order-total" placeholder="Total Amount" readonly>
                 <select id="target-staff">
                     <option value="barista">Send to Barista</option>
                     <option value="cake">Send to Baker</option>
                 </select>
                 <button onclick="submitOrder()" class="btn-order">Submit Order</button>
+                <script>if(window.renderMenu) renderMenu();</script>
             </div>
             <div class="section-card border-red">
                 <h4>➖ Withdrawal</h4>
