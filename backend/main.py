@@ -28,6 +28,28 @@ def init_db():
                       (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                        description TEXT, 
                        amount REAL)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS menu 
+                      (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                       name TEXT, 
+                       price REAL, 
+                       target TEXT)''')
+    
+    # Seed default menu if empty
+    cursor.execute("SELECT COUNT(*) FROM menu")
+    if cursor.fetchone()[0] == 0:
+        default_menu = [
+            ('Espresso', 3.0, 'barista'),
+            ('Latte', 4.0, 'barista'),
+            ('Cappuccino', 4.0, 'barista'),
+            ('Iced Coffee', 4.5, 'barista'),
+            ('Tea', 2.5, 'barista'),
+            ('Croissant', 3.5, 'cake'),
+            ('Cheesecake', 5.0, 'cake'),
+            ('Muffin', 3.0, 'cake'),
+            ('Cookie', 2.0, 'cake')
+        ]
+        cursor.executemany("INSERT INTO menu (name, price, target) VALUES (?, ?, ?)", default_menu)
+
     conn.commit()
     conn.close()
 
@@ -43,6 +65,11 @@ class Order(BaseModel):
 class Expense(BaseModel):
     description: str
     amount: float
+
+class MenuItem(BaseModel):
+    name: str
+    price: float
+    target: str
 
 # Routes
 @app.get("/orders/")
@@ -93,6 +120,42 @@ def get_expenses():
     rows = cursor.fetchall()
     conn.close()
     return [{"id": r[0], "description": r[1], "amount": r[2]} for r in rows]
+
+@app.get("/menu/")
+def get_menu():
+    conn = sqlite3.connect("cafe.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM menu")
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"id": r[0], "name": r[1], "price": r[2], "target": r[3]} for r in rows]
+
+@app.post("/menu/")
+def create_menu_item(item: MenuItem):
+    conn = sqlite3.connect("cafe.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO menu (name, price, target) VALUES (?, ?, ?)", (item.name, item.price, item.target))
+    conn.commit()
+    conn.close()
+    return {"message": "Menu item added"}
+
+@app.put("/menu/{item_id}")
+def update_menu_item(item_id: int, item: MenuItem):
+    conn = sqlite3.connect("cafe.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE menu SET name=?, price=?, target=? WHERE id=?", (item.name, item.price, item.target, item_id))
+    conn.commit()
+    conn.close()
+    return {"message": "Menu item updated"}
+
+@app.delete("/menu/{item_id}")
+def delete_menu_item(item_id: int):
+    conn = sqlite3.connect("cafe.db")
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM menu WHERE id=?", (item_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "Menu item deleted"}
 
 @app.delete("/orders/{order_id}")
 def delete_order(order_id: int):

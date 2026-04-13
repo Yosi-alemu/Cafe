@@ -1,5 +1,5 @@
 /* GLOBAL STYLES */
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; justify-content: center; padding: 40px 20px; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
 .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; }
 .hidden { display: none !important; }
 
@@ -7,7 +7,7 @@ h1 { color: #2c3e50; margin-bottom: 10px; }
 .subtitle { color: #7f8c8d; margin-bottom: 30px; }
 
 /* HUB DASHBOARD NAVIGATION */
-.hub-container { width: 850px; }
+.hub-container { width: 850px; max-width: 100%; }
 .role-selection-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 
 .role-card { background: #fff; padding: 40px 20px; border-radius: 15px; border: 1px solid #eee; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
@@ -22,8 +22,80 @@ h1 { color: #2c3e50; margin-bottom: 10px; }
 /* GRID LAYOUTS */
 .main-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 20px; text-align: left; }
 .main-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; }
-.admin-full-width { width: 1150px; }
-.cashier-width { width: 900px; }
+.admin-full-width { width: 1150px; max-width: 100%; }
+.cashier-width { width: 900px; max-width: 100%; }
+/* Responsive Design */
+@media (max-width: 1024px) {
+	.hub-container, .admin-full-width, .cashier-width {
+		width: 98vw;
+		padding: 10px;
+	}
+	.main-grid-3, .main-grid-2 {
+		grid-template-columns: 1fr;
+		gap: 15px;
+	}
+}
+
+@media (max-width: 700px) {
+	.hub-container, .admin-full-width, .cashier-width {
+		width: 100vw;
+		padding: 5px;
+		border-radius: 0;
+		box-shadow: none;
+	}
+	.role-selection-grid {
+		grid-template-columns: 1fr;
+		gap: 15px;
+	}
+	.role-card {
+		padding: 25px 10px;
+	}
+	.section-card {
+		min-height: unset;
+		padding: 12px;
+	}
+	h1, h2, h3 {
+		font-size: 1.2rem;
+	}
+	.role-icon {
+		font-size: 2.2rem;
+	}
+	.subtitle {
+		font-size: 1rem;
+	}
+	button, input, select {
+		font-size: 0.95rem;
+		padding: 10px;
+	}
+}
+
+@media (max-width: 480px) {
+	body {
+		padding: 5px;
+		flex-direction: column;
+	}
+	.container {
+		padding: 8px 2px;
+		border-radius: 0;
+		box-shadow: none;
+	}
+	.role-card {
+		padding: 15px 2px;
+	}
+	.role-icon {
+		font-size: 1.5rem;
+	}
+	h1, h2, h3 {
+		font-size: 1rem;
+	}
+	.subtitle {
+		font-size: 0.95rem;
+	}
+	button, input, select {
+		font-size: 0.9rem;
+		padding: 8px;
+	}
+}
 
 .section-card { padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; display: flex; flex-direction: column; min-height: 400px; }
 .border-green { border-top: 5px solid #27ae60; }
@@ -68,3 +140,15 @@ button:active { transform: scale(0.98); }
 .modal-content { background: white; padding: 30px; border-radius: 20px; width: 550px; text-align: center; }
 .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .spacer { flex-grow: 1; }
+
+/* PRINT STYLES */
+@media print {
+    body { background: white !important; padding: 0 !important; margin: 0 !important; }
+    .container { box-shadow: none !important; border: none !important; padding: 0 !important; }
+    h1, h2, h3, h4 { color: black !important; }
+    .btn-logout-small, .btn-order, .btn-ongoing, button, select, input, .hub-container, .border-blue, .border-dark, .menu-mgmt-card { display: none !important; }
+    .profit-box { border: 1px solid black; }
+    .scroll-box { height: auto !important; overflow: visible !important; border: none !important; }
+    #admin-panel { width: 100% !important; }
+    .main-grid-3 { grid-template-columns: 1fr !important; }
+}

@@ -17,17 +17,21 @@
                 <div class="role-icon">💰</div>
                 <h3>Cashier</h3>
                 <p>Register & Sales</p>
-                <button onclick="instantLogin('cashier')" class="btn-main">Open Station</button>
+                <button onclick="showCashierLogin()" class="btn-main">Open Station</button>
             </div>
 
-            <div class="role-card staff-card">
-                <div class="role-icon">🧑‍🍳</div>
-                <h3>Kitchen</h3>
-                <p>Order Fulfillment</p>
-                <div class="sub-buttons">
-                    <button onclick="instantLogin('barista')">☕ Barista</button>
-                    <button onclick="instantLogin('cake')">🍰 Baker</button>
-                </div>
+            <div class="role-card barista-card">
+                <div class="role-icon">☕</div>
+                <h3>Barista</h3>
+                <p>Coffee Station</p>
+                <button onclick="instantLogin('barista')" class="btn-main">Open Barista</button>
+            </div>
+
+            <div class="role-card baker-card">
+                <div class="role-icon">🍰</div>
+                <h3>Baker</h3>
+                <p>Cake Station</p>
+                <button onclick="instantLogin('cake')" class="btn-main">Open Baker</button>
             </div>
 
             <div class="role-card admin-card">
@@ -37,6 +41,17 @@
                 <button onclick="showAdminLogin()" class="btn-admin-access">Admin Login</button>
             </div>
         </div>
+    </div>
+
+    <div id="cashier-login-modal" class="container hidden auth-card">
+        <h2>Cashier Authentication</h2>
+        <div class="input-group">
+            <input type="text" id="cashier-user" placeholder="Username">
+            <input type="password" id="cashier-pass" placeholder="Password">
+        </div>
+        <p id="cashier-login-error" style="color:red; display:none; margin-top:5px; text-align:center;">Invalid Credentials</p>
+        <button onclick="checkCashierCredentials()" class="btn-order">Login</button>
+        <button onclick="goHome()" class="btn-back">Cancel</button>
     </div>
 
     <div id="admin-login-modal" class="container hidden auth-card">
@@ -64,6 +79,7 @@
                     <h2 class="net-txt">Net: $<span id="net-profit">0.00</span></h2>
                 </div>
                 <button onclick="showOngoingModal()" class="btn-ongoing">📋 View Live Queue</button>
+                <button onclick="window.print()" class="btn-ongoing" style="margin-top:10px; background:#8e44ad;">🖨️ Print Financials (PDF)</button>
                 <h4 style="margin-top:15px;">Withdrawal History</h4>
                 <div class="scroll-box" style="height: 180px;">
                     <table class="admin-table">
@@ -74,14 +90,34 @@
 
             <div class="section-card border-blue">
                 <h4>➕ Create New Order</h4>
-                <input type="text" id="admin-order-items" placeholder="Items (e.g. 1 Latte)">
-                <input type="text" id="admin-order-table" placeholder="Table #">
-                <input type="number" id="admin-order-total" placeholder="Price ($)">
-                <select id="admin-target-staff">
-                    <option value="barista">Barista (Drink)</option>
-                    <option value="cake">Baker (Food)</option>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                    <select id="admin-menu-dropdown" style="font-size: 1.1rem; padding: 12px;">
+                        <option value="" disabled selected>Select an item...</option>
+                    </select>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="admin-menu-qty" value="1" min="1" style="flex:1; font-size: 1.1rem;">
+                        <button onclick="adminAddToCart()" class="btn-main" style="flex:2; font-size: 1.1rem;">Add to Cart</button>
+                    </div>
+                </div>
+                
+                <ul id="admin-cart-list" style="list-style:none; padding:0; margin-bottom:15px; max-height:150px; overflow-y:auto; border-bottom:1px solid #eee;">
+                    <li style="color:#888; text-align:center; padding:10px;">Cart is empty</li>
+                </ul>
+                <h3 style="margin:15px 0; text-align:right;">Total: $<span id="admin-live-total">0.00</span></h3>
+                <select id="admin-order-table" style="width:100%; padding:8px; margin-bottom:15px; border-radius:4px; border:1px solid #ddd;">
+                    <option value="" disabled selected>Select Table...</option>
+                    <option value="1">Table 1</option>
+                    <option value="2">Table 2</option>
+                    <option value="3">Table 3</option>
+                    <option value="4">Table 4</option>
+                    <option value="5">Table 5</option>
+                    <option value="6">Table 6</option>
+                    <option value="7">Table 7</option>
+                    <option value="8">Table 8</option>
+                    <option value="9">Table 9</option>
+                    <option value="10">Table 10</option>
                 </select>
-                <button onclick="adminSubmitOrder()" class="btn-order">Place Order</button>
+                <button onclick="adminSubmitOrder()" class="btn-order">Submit Order</button>
             </div>
 
             <div class="section-card border-dark">
@@ -89,10 +125,35 @@
                 <div class="scroll-box" style="height: 380px;">
                     <table class="admin-table">
                         <thead>
-                            <tr><th>ID</th><th>Table</th><th>Total</th><th>Status</th><th>Action</th></tr>
+                            <tr><th>ID</th><th>Table</th><th>Items</th><th>Total</th><th>Status</th><th>Action</th></tr>
                         </thead>
                         <tbody id="admin-all-orders"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="section-card border-dark menu-mgmt-card" style="grid-column: 1 / -1;">
+                <h4>⚙️ Menu Management</h4>
+                <div style="display:flex; gap: 15px;">
+                    <div style="flex:1;">
+                        <h5>Current Menu</h5>
+                        <div class="scroll-box" style="height:250px;">
+                            <table class="admin-table">
+                                <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Target</th><th>Act</th></tr></thead>
+                                <tbody id="admin-menu-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div style="flex:1;">
+                        <h5>Add New Item</h5>
+                        <input type="text" id="new-item-name" placeholder="Item Name (e.g. Latte)">
+                        <input type="number" id="new-item-price" placeholder="Price ($)" step="0.5">
+                        <select id="new-item-target">
+                            <option value="barista">Barista (Drinks)</option>
+                            <option value="cake">Baker (Food)</option>
+                        </select>
+                        <button onclick="addMenuItem()" class="btn-main" style="margin-top:10px;">Save Item</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -106,12 +167,32 @@
         <div class="main-grid-2">
             <div class="section-card border-green">
                 <h4>➕ New Sale</h4>
-                <input type="text" id="order-items" placeholder="Order Details">
-                <input type="text" id="order-table" placeholder="Table Number">
-                <input type="number" id="order-total" placeholder="Total Amount">
-                <select id="target-staff">
-                    <option value="barista">Send to Barista</option>
-                    <option value="cake">Send to Baker</option>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                    <select id="menu-dropdown" style="font-size: 1.1rem; padding: 12px;">
+                        <option value="" disabled selected>Select an item...</option>
+                    </select>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="menu-qty" value="1" min="1" style="flex:1; font-size: 1.1rem;">
+                        <button onclick="addToCart()" class="btn-main" style="flex:2; font-size: 1.1rem;">Add to Cart</button>
+                    </div>
+                </div>
+                
+                <ul id="cart-list" style="list-style:none; padding:0; margin-bottom:15px; max-height:150px; overflow-y:auto; border-bottom:1px solid #eee;">
+                    <li style="color:#888; text-align:center; padding:10px;">Cart is empty</li>
+                </ul>
+                <h3 style="margin:15px 0; text-align:right;">Total: $<span id="live-total">0.00</span></h3>
+                <select id="order-table" style="width:100%; padding:8px; margin-bottom:15px; border-radius:4px; border:1px solid #ddd;">
+                    <option value="" disabled selected>Select Table...</option>
+                    <option value="1">Table 1</option>
+                    <option value="2">Table 2</option>
+                    <option value="3">Table 3</option>
+                    <option value="4">Table 4</option>
+                    <option value="5">Table 5</option>
+                    <option value="6">Table 6</option>
+                    <option value="7">Table 7</option>
+                    <option value="8">Table 8</option>
+                    <option value="9">Table 9</option>
+                    <option value="10">Table 10</option>
                 </select>
                 <button onclick="submitOrder()" class="btn-order">Submit Order</button>
             </div>
