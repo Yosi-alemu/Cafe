@@ -134,6 +134,7 @@ button:active { transform: scale(0.98); }
 .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: white; }
 .tag-completed { background: #27ae60; }
 .tag-pending { background: #f39c12; }
+.tag-cancelled { background: #e74c3c; }
 
 /* MODAL */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 999; }
@@ -146,7 +147,7 @@ button:active { transform: scale(0.98); }
     body { background: white !important; padding: 0 !important; margin: 0 !important; }
     .container { box-shadow: none !important; border: none !important; padding: 0 !important; }
     h1, h2, h3, h4 { color: black !important; }
-    .btn-logout-small, .btn-order, .btn-ongoing, button, select, input, .hub-container, .border-blue, .border-dark, .menu-mgmt-card { display: none !important; }
+    .btn-logout-small, .btn-order, .btn-ongoing, button, select, input, .hub-container, .border-blue, .menu-mgmt-card { display: none !important; }
     .profit-box { border: 1px solid black; }
     .scroll-box { height: auto !important; overflow: visible !important; border: none !important; }
     #admin-panel { width: 100% !important; }

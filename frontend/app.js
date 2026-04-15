@@ -6,30 +6,20 @@ function showCashierLogin() {
 function checkCashierCredentials() {
     var userEl = document.getElementById('cashier-user');
     var passEl = document.getElementById('cashier-pass');
-    
-    if(userEl.value === 'cashier' && passEl.value === 'cafe123') {
+
+    if (userEl.value === 'cashier' && passEl.value === 'cafe123') {
         showView('cashier-panel');
         document.getElementById('cashier-login-error').style.display = 'none';
     } else {
         document.getElementById('cashier-login-error').style.display = 'block';
     }
-    
+
     // Clear input data after submission regardless of success
     userEl.value = '';
     passEl.value = '';
 }
 // --- MENU & ORDER CALCULATION ---
-const MENU = [
-    { name: 'Espresso', price: 3.0, target: 'barista' },
-    { name: 'Latte', price: 4.0, target: 'barista' },
-    { name: 'Cappuccino', price: 4.0, target: 'barista' },
-    { name: 'Iced Coffee', price: 4.5, target: 'barista' },
-    { name: 'Tea', price: 2.5, target: 'barista' },
-    { name: 'Croissant', price: 3.5, target: 'cake' },
-    { name: 'Cheesecake', price: 5.0, target: 'cake' },
-    { name: 'Muffin', price: 3.0, target: 'cake' },
-    { name: 'Cookie', price: 2.0, target: 'cake' }
-];
+let MENU = [];
 
 let currentCart = [];
 
@@ -53,10 +43,10 @@ function addToCart() {
     if (index === "" || qty <= 0) return alert("Please select a valid item and quantity.");
 
     const selectedItem = MENU[index];
-    
+
     // Check if it already exists in the cart to increment quantity
     const existing = currentCart.find(c => c.item.name === selectedItem.name);
-    if(existing) {
+    if (existing) {
         existing.qty += qty;
     } else {
         currentCart.push({ item: selectedItem, qty: qty });
@@ -100,7 +90,7 @@ function calculateLiveTotal() {
     let total = currentCart.reduce((sum, cartItem) => sum + (cartItem.item.price * cartItem.qty), 0);
     document.getElementById('live-total').innerText = total.toFixed(2);
 }
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://192.168.1.2:8000";
 let currentRole = "";
 
 // --- VIEW NAVIGATION ---
@@ -110,14 +100,14 @@ function showView(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-function goHome() { 
-    showView('navigation-hub'); 
-    currentRole = ""; 
+function goHome() {
+    showView('navigation-hub');
+    currentRole = "";
 }
 
 function instantLogin(role) {
-    if (role === 'cashier') { 
-        showView('cashier-panel'); 
+    if (role === 'cashier') {
+        showView('cashier-panel');
     } else {
         currentRole = role;
         document.getElementById('staff-title').innerText = role.toUpperCase() + " Queue";
@@ -129,8 +119,8 @@ function instantLogin(role) {
 // --- ADMIN AUTH & CLEARING ---
 
 // THIS WAS THE MISSING FUNCTION CAUSING THE ERROR
-function showAdminLogin() { 
-    showView('admin-login-modal'); 
+function showAdminLogin() {
+    showView('admin-login-modal');
 }
 
 async function checkAdminCredentials() {
@@ -140,10 +130,10 @@ async function checkAdminCredentials() {
     if (uInput.value === "admin" && pInput.value === "admin123") {
         showView('admin-panel');
         loadAdminData();
-        
+
         // CLEAR LOGIN BOXES AFTER SUCCESS
-        uInput.value = ""; 
-        pInput.value = ""; 
+        uInput.value = "";
+        pInput.value = "";
     } else {
         alert("Wrong Password");
         pInput.value = ""; // Clear password on failure too
@@ -158,7 +148,7 @@ async function showOngoingModal() {
     const orders = await res.json();
     const list = document.getElementById('modal-queue-list');
     list.innerHTML = "";
-    
+
     orders.filter(o => o.status !== 'completed').forEach(o => {
         list.innerHTML += `
             <div style="padding:12px; border-bottom:1px solid #eee; text-align:left;">
@@ -168,8 +158,8 @@ async function showOngoingModal() {
     });
 }
 
-function closeOngoingModal() { 
-    document.getElementById('ongoing-modal').classList.add('hidden'); 
+function closeOngoingModal() {
+    document.getElementById('ongoing-modal').classList.add('hidden');
 }
 
 // --- ORDER SUBMISSION & CLEARING ---
@@ -177,8 +167,8 @@ function closeOngoingModal() {
 async function submitOrder() {
     const tableInput = document.getElementById('order-table');
 
-    if(!tableInput.value) return alert("Please select a table number.");
-    if(currentCart.length === 0) return alert("Please add at least one item to the order.");
+    if (!tableInput.value) return alert("Please select a table number.");
+    if (currentCart.length === 0) return alert("Please add at least one item to the order.");
 
     let baristaItems = [];
     let baristaTotal = 0;
@@ -199,28 +189,28 @@ async function submitOrder() {
     const promises = [];
 
     if (baristaItems.length > 0) {
-        promises.push(fetch(`${API_BASE}/orders/`, { 
-            method: "POST", 
-            headers: {"Content-Type": "application/json"}, 
+        promises.push(fetch(`${API_BASE}/orders/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 items: baristaItems.join(', '),
                 table_number: tableInput.value,
                 total: baristaTotal,
                 status: 'barista'
-            }) 
+            })
         }));
     }
 
     if (bakerItems.length > 0) {
-        promises.push(fetch(`${API_BASE}/orders/`, { 
-            method: "POST", 
-            headers: {"Content-Type": "application/json"}, 
+        promises.push(fetch(`${API_BASE}/orders/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 items: bakerItems.join(', '),
                 table_number: tableInput.value,
                 total: bakerTotal,
                 status: 'cake'
-            }) 
+            })
         }));
     }
 
@@ -231,41 +221,199 @@ async function submitOrder() {
     document.getElementById('menu-dropdown').value = "";
     document.getElementById('menu-qty').value = "1";
     currentCart = [];
-    
+
     renderCart();
     calculateLiveTotal();
-    
+
     alert("Order Sent Successfully");
 }
 
-async function adminSubmitOrder() {
-    const itemsInput = document.getElementById('admin-order-items');
-    const tableInput = document.getElementById('admin-order-table');
-    const totalInput = document.getElementById('admin-order-total');
-    const statusSelect = document.getElementById('admin-target-staff');
+async function fetchMenu() {
+    try {
+        const res = await fetch(`${API_BASE}/menu/`);
+        MENU = await res.json();
+        renderMenu();
+        if (document.getElementById('admin-menu-list')) {
+            renderAdminMenuMgmt();
+            renderAdminOrderDropdown();
+        }
+    } catch (e) {
+        console.error("Error fetching menu", e);
+    }
+}
 
-    if(!itemsInput.value || !tableInput.value || !totalInput.value) return alert("Fill all fields");
+function renderAdminMenuMgmt() {
+    const list = document.getElementById('admin-menu-list');
+    list.innerHTML = "";
+    MENU.forEach(item => {
+        list.innerHTML += `
+            <tr>
+                <td>#${item.id}</td>
+                <td>${item.name}</td>
+                <td>$${item.price.toFixed(2)}</td>
+                <td>${item.target}</td>
+                <td><button onclick="deleteMenuItem(${item.id})" style="background:#ff7675;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">X</button></td>
+            </tr>
+        `;
+    });
+}
 
-    const data = {
-        items: itemsInput.value,
-        table_number: tableInput.value,
-        total: parseFloat(totalInput.value),
-        status: statusSelect.value
-    };
+function renderAdminOrderDropdown() {
+    const dropdown = document.getElementById('admin-menu-dropdown');
+    dropdown.innerHTML = '<option value="" disabled selected>Select an item...</option>';
+    MENU.forEach((item, index) => {
+        dropdown.innerHTML += `<option value="${index}">${item.name} ($${item.price.toFixed(2)})</option>`;
+    });
+}
 
-    await fetch(`${API_BASE}/orders/`, { 
-        method: "POST", 
-        headers: {"Content-Type": "application/json"}, 
-        body: JSON.stringify(data) 
+async function addMenuItem() {
+    const name = document.getElementById('new-item-name').value;
+    const price = parseFloat(document.getElementById('new-item-price').value);
+    const target = document.getElementById('new-item-target').value;
+    if (!name || isNaN(price)) return alert("Please enter valid name and price");
+
+    await fetch(`${API_BASE}/menu/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, target })
     });
 
-    // CLEAR ADMIN QUICK ORDER BOXES
-    itemsInput.value = "";
-    tableInput.value = "";
-    totalInput.value = "";
-    
-    loadAdminData(); 
+    document.getElementById('new-item-name').value = "";
+    document.getElementById('new-item-price').value = "";
+    fetchMenu();
+    alert("Menu item saved successfully!");
 }
+
+async function deleteMenuItem(id) {
+    if (confirm("Delete this menu item?")) {
+        await fetch(`${API_BASE}/menu/${id}`, { method: 'DELETE' });
+        fetchMenu();
+    }
+}
+
+// Admin Cart Logic
+let adminCurrentCart = [];
+
+function adminAddToCart() {
+    const dropdown = document.getElementById('admin-menu-dropdown');
+    const qtyInput = document.getElementById('admin-menu-qty');
+    const index = dropdown.value;
+    const qty = parseInt(qtyInput.value) || 0;
+
+    if (index === "" || qty <= 0) return alert("Please select a valid item and quantity.");
+
+    const selectedItem = MENU[index];
+
+    const existing = adminCurrentCart.find(c => c.item.name === selectedItem.name);
+    if (existing) {
+        existing.qty += qty;
+    } else {
+        adminCurrentCart.push({ item: selectedItem, qty: qty });
+    }
+
+    dropdown.value = "";
+    qtyInput.value = "1";
+
+    adminRenderCart();
+    adminCalculateLiveTotal();
+}
+
+function adminRenderCart() {
+    const cartList = document.getElementById('admin-cart-list');
+    cartList.innerHTML = "";
+    if (adminCurrentCart.length === 0) {
+        cartList.innerHTML = '<li style="color:#888; text-align:center; padding:10px;">Cart is empty</li>';
+        return;
+    }
+
+    adminCurrentCart.forEach((cartItem, idx) => {
+        cartList.innerHTML += `
+            <li style="display:flex; justify-content:space-between; padding:5px 0;">
+                <span>${cartItem.qty} x ${cartItem.item.name}</span>
+                <span>$${(cartItem.qty * cartItem.item.price).toFixed(2)} 
+                    <button onclick="adminRemoveFromCart(${idx})" style="margin-left:10px; background:#ff7675; color:white; border:none; border-radius:3px; cursor:pointer;">X</button>
+                </span>
+            </li>
+        `;
+    });
+}
+
+function adminRemoveFromCart(idx) {
+    adminCurrentCart.splice(idx, 1);
+    adminRenderCart();
+    adminCalculateLiveTotal();
+}
+
+function adminCalculateLiveTotal() {
+    let total = adminCurrentCart.reduce((sum, cartItem) => sum + (cartItem.item.price * cartItem.qty), 0);
+    document.getElementById('admin-live-total').innerText = total.toFixed(2);
+}
+
+async function adminSubmitOrder() {
+    const tableInput = document.getElementById('admin-order-table');
+
+    if (!tableInput.value) return alert("Please select a table number.");
+    if (adminCurrentCart.length === 0) return alert("Please add at least one item to the order.");
+
+    let baristaItems = [];
+    let baristaTotal = 0;
+    let bakerItems = [];
+    let bakerTotal = 0;
+
+    // Parse the cart into stations
+    adminCurrentCart.forEach(cartItem => {
+        if (cartItem.item.target === 'barista') {
+            baristaItems.push(`${cartItem.qty} x ${cartItem.item.name}`);
+            baristaTotal += cartItem.qty * cartItem.item.price;
+        } else {
+            bakerItems.push(`${cartItem.qty} x ${cartItem.item.name}`);
+            bakerTotal += cartItem.qty * cartItem.item.price;
+        }
+    });
+
+    const promises = [];
+
+    if (baristaItems.length > 0) {
+        promises.push(fetch(`${API_BASE}/orders/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                items: baristaItems.join(', '),
+                table_number: tableInput.value,
+                total: baristaTotal,
+                status: 'barista'
+            })
+        }));
+    }
+
+    if (bakerItems.length > 0) {
+        promises.push(fetch(`${API_BASE}/orders/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                items: bakerItems.join(', '),
+                table_number: tableInput.value,
+                total: bakerTotal,
+                status: 'cake'
+            })
+        }));
+    }
+
+    await Promise.all(promises);
+
+    tableInput.value = "";
+    document.getElementById('admin-menu-dropdown').value = "";
+    document.getElementById('admin-menu-qty').value = "1";
+    adminCurrentCart = [];
+
+    adminRenderCart();
+    adminCalculateLiveTotal();
+    loadAdminData();
+    alert("Order Sent Successfully");
+}
+
+// Ensure menu is fetched on load
+fetchMenu();
 
 // --- WITHDRAWAL & CLEARING ---
 
@@ -273,20 +421,20 @@ async function submitWithdrawal() {
     const descInput = document.getElementById('exp-desc');
     const amtInput = document.getElementById('exp-amount');
 
-    if(!descInput.value || !amtInput.value) return alert("Enter reason and amount");
+    if (!descInput.value || !amtInput.value) return alert("Enter reason and amount");
 
     const data = {
         description: descInput.value,
         amount: parseFloat(amtInput.value)
     };
 
-    const response = await fetch(`${API_BASE}/expenses/`, { 
-        method: "POST", 
-        headers: {"Content-Type": "application/json"}, 
-        body: JSON.stringify(data) 
+    const response = await fetch(`${API_BASE}/expenses/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
     });
 
-    if(response.ok) {
+    if (response.ok) {
         // CLEAR WITHDRAWAL BOXES
         descInput.value = "";
         amtInput.value = "";
@@ -301,13 +449,16 @@ async function loadStaffOrders() {
     const orders = await res.json();
     const list = document.getElementById('staff-orders-list');
     list.innerHTML = "";
-    
+
     orders.filter(o => o.status === currentRole).forEach(o => {
         list.innerHTML += `
             <div class="section-card" style="min-height:auto; margin-bottom:10px;">
                 <h3>Table ${o.table_number}</h3>
                 <p>${o.items}</p>
-                <button onclick="updateStatus(${o.id}, 'completed')" class="btn-order">DONE</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="updateStatus(${o.id}, 'completed')" class="btn-order" style="flex:1; margin-top:0;">DONE</button>
+                    <button onclick="updateStatus(${o.id}, 'cancelled')" class="btn-withdraw" style="flex:1; margin-top:0;">CANCEL</button>
+                </div>
             </div>`;
     });
 }
@@ -325,21 +476,23 @@ async function loadAdminData() {
 
     const gross = orders.filter(o => o.status === 'completed').reduce((s, o) => s + o.total, 0);
     const withdr = expenses.reduce((s, e) => s + e.amount, 0);
-    
+
     document.getElementById('total-sales').innerText = gross.toFixed(2);
     document.getElementById('total-expenses').innerText = withdr.toFixed(2);
     document.getElementById('net-profit').innerText = (gross - withdr).toFixed(2);
 
     const expT = document.getElementById('expense-tbody');
     expT.innerHTML = "";
-    expenses.reverse().forEach(e => { 
-        expT.innerHTML += `<tr><td>${e.description}</td><td style="color:red">-$${e.amount.toFixed(2)}</td></tr>`; 
+    expenses.reverse().forEach(e => {
+        expT.innerHTML += `<tr><td>${e.description}</td><td style="color:red">-$${e.amount.toFixed(2)}</td></tr>`;
     });
 
     const histT = document.getElementById('admin-all-orders');
     histT.innerHTML = "";
     orders.reverse().forEach(o => {
-        const tagClass = o.status === 'completed' ? 'tag-completed' : 'tag-pending';
+        let tagClass = 'tag-pending';
+        if (o.status === 'completed') tagClass = 'tag-completed';
+        else if (o.status === 'cancelled') tagClass = 'tag-cancelled';
         histT.innerHTML += `
             <tr>
                 <td>#${o.id}</td>
@@ -353,8 +506,8 @@ async function loadAdminData() {
 }
 
 async function deleteOrder(id) {
-    if(confirm("Permanently delete this order?")) { 
-        await fetch(`${API_BASE}/orders/${id}`, {method:"DELETE"}); 
-        loadAdminData(); 
+    if (confirm("Permanently delete this order?")) {
+        await fetch(`${API_BASE}/orders/${id}`, { method: "DELETE" });
+        loadAdminData();
     }
 }
