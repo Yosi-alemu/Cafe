@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sqlite3
+from datetime import date
 
 app = FastAPI()
 
@@ -23,16 +24,29 @@ def init_db():
                        items TEXT, 
                        total REAL, 
                        table_number TEXT, 
-                       status TEXT)''')
+                       status TEXT,
+                       archived INTEGER DEFAULT 0,
+                       archived_date TEXT)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS expenses 
                       (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                        description TEXT, 
-                       amount REAL)''')
+                       amount REAL,
+                       archived INTEGER DEFAULT 0,
+                       archived_date TEXT)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS menu 
                       (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                        name TEXT, 
                        price REAL, 
                        target TEXT)''')
+
+    # --- Safe migrations for existing databases ---
+    # Add 'archived' and 'archived_date' columns if they don't already exist
+    for table in ['orders', 'expenses']:
+        existing_cols = [row[1] for row in cursor.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'archived' not in existing_cols:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN archived INTEGER DEFAULT 0")
+        if 'archived_date' not in existing_cols:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN archived_date TEXT")
     
     # Seed default menu if empty
     cursor.execute("SELECT COUNT(*) FROM menu")
@@ -76,7 +90,7 @@ class MenuItem(BaseModel):
 def get_orders():
     conn = sqlite3.connect("cafe.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM orders")
+    cursor.execute("SELECT * FROM orders WHERE archived = 0")
     rows = cursor.fetchall()
     conn.close()
     return [{"id": r[0], "items": r[1], "total": r[2], "table_number": r[3], "status": r[4]} for r in rows]
@@ -116,10 +130,22 @@ def create_expense(exp: Expense):
 def get_expenses():
     conn = sqlite3.connect("cafe.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM expenses")
+    cursor.execute("SELECT * FROM expenses WHERE archived = 0")
     rows = cursor.fetchall()
     conn.close()
     return [{"id": r[0], "description": r[1], "amount": r[2]} for r in rows]
+
+# --- End of Day Archive ---
+@app.post("/end-of-day/")
+def end_of_day():
+    today = str(date.today())
+    conn = sqlite3.connect("cafe.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE orders SET archived = 1, archived_date = ? WHERE archived = 0", (today,))
+    cursor.execute("UPDATE expenses SET archived = 1, archived_date = ? WHERE archived = 0", (today,))
+    conn.commit()
+    conn.close()
+    return {"message": f"End of day complete. All records archived for {today}."}
 
 @app.get("/menu/")
 def get_menu():
